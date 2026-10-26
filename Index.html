@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Relazioni</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0f0f1a;
+    --surface: #1a1a2e;
+    --surface2: #22223b;
+    --border: #2d2d4e;
+    --accent: #c9a96e;
+    --accent-dim: rgba(201,169,110,0.12);
+    --accent-mid: rgba(201,169,110,0.25);
+    --text: #e8e8f0;
+    --text-muted: #8888aa;
+    --text-dim: #55556a;
+    --danger: #e07070;
+    --green: #70c07a;
+    --orange: #e09060;
+    --red: #e06060;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px 12px;
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .header-back {
+    width: 34px; height: 34px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 16px;
+    flex-shrink: 0;
+  }
+  .header-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px; font-weight: 500;
+    color: var(--text);
+  }
+  .header-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+  .header-actions { margin-left: auto; display: flex; gap: 8px; }
+  .btn-icon {
+    width: 34px; height: 34px;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-mid);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 16px; color: var(--accent);
+  }
+
+  /* ── VIEWS ── */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ── LIST VIEW ── */
+  .dashboard-bar {
+    padding: 16px 20px;
+    display: flex; gap: 12px;
+  }
+  .dash-card {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+  }
+  .dash-card .num {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px; color: var(--accent);
+  }
+  .dash-card .lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  .section-label {
+    padding: 0 20px 8px;
+    font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-muted);
+  }
+
+  .contact-list { padding: 0 16px 100px; display: flex; flex-direction: column; gap: 8px; }
+
+  .contact-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 14px;
+    transition: border-color 0.15s;
+    position: relative;
+  }
+  .contact-card:hover { border-color: var(--accent-mid); }
+  .contact-card.overdue { border-left: 3px solid var(--red); }
+  .contact-card.due-soon { border-left: 3px solid var(--orange); }
+  .contact-card.ok { border-left: 3px solid var(--green); }
+
+  .avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+    font-family: 'Playfair Display', serif;
+  }
+  .avatar.overdue { border-color: var(--red); }
+  .avatar.due-soon { border-color: var(--orange); }
+  .avatar.ok { border-color: var(--green); }
+
+  .contact-info { flex: 1; min-width: 0; }
+  .contact-name { font-weight: 500; font-size: 15px; color: var(--text); }
+  .contact-meta { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+  .contact-status { text-align: right; flex-shrink: 0; }
+  .days-pill {
+    display: inline-block; padding: 3px 9px;
+    border-radius: 20px; font-size: 11px; font-weight: 500;
+  }
+  .days-pill.overdue { background: rgba(224,96,96,0.15); color: var(--red); }
+  .days-pill.due-soon { background: rgba(224,144,96,0.15); color: var(--orange); }
+  .days-pill.ok { background: rgba(112,192,122,0.15); color: var(--green); }
+
+  /* ── FAB ── */
+  .fab {
+    position: fixed; bottom: 24px; right: 20px;
+    width: 56px; height: 56px; border-radius: 28px;
+    background: var(--accent);
+    color: #0f0f1a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 300;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(201,169,110,0.4);
+    z-index: 200;
+    transition: transform 0.1s;
+  }
+  .fab:active { transform: scale(0.94); }
+
+  /* ── DETAIL VIEW ── */
+  .detail-hero {
+    padding: 24px 20px 20px;
+    display: flex; align-items: flex-start; gap: 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-avatar {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--surface2);
+    border: 2px solid var(--accent-mid);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; flex-shrink: 0;
+    font-family: 'Playfair Display', serif;
+  }
+  .detail-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; color: var(--text);
+  }
+  .detail-tag {
+    display: inline-block;
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-top: 4px;
+  }
+  .detail-notes { font-size: 13px; color: var(--text-muted); margin-top: 6px; }
+
+  .detail-stats {
+    padding: 16px 20px;
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px;
+    text-align: center;
+  }
+  .stat-box .val { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--accent); }
+  .stat-box .lbl { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+  .next-call-banner {
+    margin: 0 20px 16px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer;
+  }
+  .next-call-banner.overdue { background: rgba(224,96,96,0.12); border: 1px solid rgba(224,96,96,0.3); }
+  .next-call-banner.due-soon { background: rgba(224,144,96,0.12); border: 1px solid rgba(224,144,96,0.3); }
+  .next-call-banner.ok { background: rgba(112,192,122,0.1); border: 1px solid rgba(112,192,122,0.25); }
+
+  .banner-icon { font-size: 22px; }
+  .banner-text .main { font-size: 14px; font-weight: 500; }
+  .banner-text .sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .banner-btn {
+    margin-left: auto;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12px; font-weight: 500;
+    cursor: pointer; border: none;
+  }
+  .overdue .banner-btn { background: var(--red); color: #fff; }
+  .due-soon .banner-btn { background: var(--orange); color: #fff; }
+  .ok .banner-btn { background: var(--green); color: #1a1a1a; }
+
+  /* LOG */
+  .log-section { padding: 0 20px 100px; }
+  .log-section h3 {
+    font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 12px;
+  }
+  .add-log-btn {
+    width: 100%; padding: 12px;
+    background: var(--accent-dim);
+    border: 1px dashed var(--accent-mid);
+    border-radius: 10px;
+    color: var(--accent); font-size: 13px;
+    cursor: pointer; margin-bottom: 14px;
+    font-family: 'Inter', sans-serif;
+  }
+  .log-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px;
+    margin-bottom: 8px;
+    position: relative;
+  }
+  .log-date { font-size: 11px; color: var(--accent); margin-bottom: 4px; }
+  .log-note { font-size: 13px; color: var(--text); line-height: 1.5; }
+  .log-duration { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+  .log-delete {
+    position: absolute; top: 10px; right: 12px;
+    font-size: 14px; color: var(--text-dim); cursor: pointer;
+  }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7); z-index: 300;
+    align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    padding: 24px 20px 40px;
+    width: 100%; max-width: 480px;
+    max-height: 85vh; overflow-y: auto;
+  }
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; margin-bottom: 20px;
+  }
+  .field { margin-bottom: 16px; }
+  .field label { font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px; }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--accent-mid);
+  }
+  .field select option { background: var(--surface2); }
+  .field textarea { resize: vertical; min-height: 80px; }
+
+  .freq-grid {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 8px;
+  }
+  .freq-option {
+    padding: 10px 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    text-align: center; cursor: pointer;
+    font-size: 12px; color: var(--text-muted);
+    transition: all 0.15s;
+  }
+  .freq-option.selected {
+    background: var(--accent-dim);
+    border-color: var(--accent-mid);
+    color: var(--accent);
+  }
+  .freq-option .freq-days { font-size: 18px; font-family: 'Playfair Display', serif; color: var(--accent); }
+  .freq-option.selected .freq-days { color: var(--accent); }
+
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .btn-primary {
+    flex: 1; padding: 14px;
+    background: var(--accent); color: #0f0f1a;
+    border: none; border-radius: 12px;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: 'Inter', sans-serif;
+  }
+  .btn-secondary {
+    padding: 14px 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 12px; font-size: 14px;
+    cursor: pointer; font-family: 'Inter', sans-serif;
+  }
+  .btn-danger {
+    width: 100%; padding: 12px;
+    background: transparent;
+    border: 1px solid rgba(224,96,96,0.3);
+    color: var(--danger);
+    border-radius: 10px; font-size: 13px;
+    cursor: pointer; margin-top: 10px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* ── EMPTY ── */
+  .empty-state {
+    text-align: center; padding: 60px 20px;
+  }
+  .empty-state .icon { font-size: 52px; margin-bottom: 16px; }
+  .empty-state .title { font-family: 'Playfair Display', serif; font-size: 20px; margin-bottom: 8px; }
+  .empty-state .sub { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+
+  /* EMOJI PICKER */
+  .emoji-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .emoji-btn {
+    width: 40px; height: 40px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; font-size: 20px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .emoji-btn.selected { border-color: var(--accent-mid); background: var(--accent-dim); }
+
+  /* CONTACT TYPE */
+  .ctype-grid {
+    display: grid; grid-template-columns: repeat(2,1fr); gap: 8px;
+  }
+  .ctype-option {
+    padding: 10px 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    text-align: center; cursor: pointer;
+    font-size: 13px; color: var(--text-muted);
+    display: flex; align-items: center; gap: 8px;
+    transition: all 0.15s;
+  }
+  .ctype-option .ct-icon { font-size: 20px; }
+  .ctype-option.selected {
+    background: var(--accent-dim);
+    border-color: var(--accent-mid);
+    color: var(--accent);
+  }
+  .ctype-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 2px 8px;
+    font-size: 11px; color: var(--text-muted);
+    margin-top: 4px; margin-right: 4px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ VIEW: LIST ══ -->
+<div id="view-list" class="view active">
+  <div class="header">
+    <div>
+      <div class="header-title">Relazioni</div>
+      <div class="header-sub" id="header-sub">Piano chiamate</div>
+    </div>
+    <div class="header-actions">
+      <div class="btn-icon" onclick="showView('view-list')">⚡</div>
+    </div>
+  </div>
+
+  <div class="dashboard-bar">
+    <div class="dash-card">
+      <div class="num" id="dash-total">0</div>
+      <div class="lbl">Relazioni</div>
+    </div>
+    <div class="dash-card">
+      <div class="num" style="color:var(--red)" id="dash-overdue">0</div>
+      <div class="lbl">In ritardo</div>
+    </div>
+    <div class="dash-card">
+      <div class="num" style="color:var(--orange)" id="dash-soon">0</div>
+      <div class="lbl">Questa sett.</div>
+    </div>
+  </div>
+
+  <div class="section-label" id="sort-label">Priorità contatto</div>
+  <div class="contact-list" id="contact-list">
+    <div class="empty-state">
+      <div class="icon">🤝</div>
+      <div class="title">Inizia con una relazione</div>
+      <div class="sub">Aggiungi persone importanti e imposta con quale frequenza vuoi sentirle. Tieni traccia di ogni conversazione.</div>
+    </div>
+  </div>
+
+  <div class="fab" onclick="openAddContact()">+</div>
+</div>
+
+<!-- ══ VIEW: DETAIL ══ -->
+<div id="view-detail" class="view">
+  <div class="header">
+    <div class="header-back" onclick="showView('view-list')">←</div>
+    <div>
+      <div class="header-title" id="detail-header-name">—</div>
+    </div>
+    <div class="header-actions">
+      <div class="btn-icon" onclick="editCurrentContact()">✏️</div>
+    </div>
+  </div>
+
+  <div class="detail-hero">
+    <div class="detail-avatar" id="detail-avatar">?</div>
+    <div>
+      <div class="detail-name" id="detail-name">—</div>
+      <div class="detail-tag" id="detail-tag">—</div>
+      <div class="detail-notes" id="detail-notes"></div>
+    </div>
+  </div>
+
+  <div class="detail-stats">
+    <div class="stat-box">
+      <div class="val" id="stat-calls">0</div>
+      <div class="lbl">Chiamate</div>
+    </div>
+    <div class="stat-box">
+      <div class="val" id="stat-freq">—</div>
+      <div class="lbl">Freq. giorni</div>
+    </div>
+    <div class="stat-box">
+      <div class="val" id="stat-since">—</div>
+      <div class="lbl">Giorni fa</div>
+    </div>
+  </div>
+
+  <div class="next-call-banner ok" id="next-call-banner" onclick="logCallFromBanner()">
+    <div class="banner-icon">📞</div>
+    <div class="banner-text">
+      <div class="main" id="banner-main">—</div>
+      <div class="sub" id="banner-sub">—</div>
+    </div>
+    <button class="banner-btn" id="banner-btn">Chiama</button>
+  </div>
+
+  <div class="log-section">
+    <h3>Storico conversazioni</h3>
+    <button class="add-log-btn" onclick="openLogModal()">+ Aggiungi conversazione</button>
+    <div id="log-list"></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: ADD/EDIT CONTACT ══ -->
+<div class="modal-overlay" id="modal-contact">
+  <div class="modal">
+    <div class="modal-title" id="modal-contact-title">Nuova relazione</div>
+
+    <div class="field">
+      <label>Nome</label>
+      <input type="text" id="f-name" placeholder="Es. Marco Rossi">
+    </div>
+
+    <div class="field">
+      <label>Icona</label>
+      <div class="emoji-row" id="emoji-row"></div>
+    </div>
+
+    <div class="field">
+      <label>Categoria</label>
+      <select id="f-category">
+        <option value="Famiglia">Famiglia</option>
+        <option value="Amico">Amico</option>
+        <option value="Spirituale">Spirituale</option>
+        <option value="Lavoro">Lavoro</option>
+        <option value="Altro">Altro</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Modalità di contatto preferita</label>
+      <div class="ctype-grid" id="f-ctype-grid"></div>
+    </div>
+
+    <div class="field">
+      <label>Frequenza chiamate</label>
+      <div class="freq-grid" id="freq-grid"></div>
+    </div>
+
+    <div class="field">
+      <label>Note (opzionale)</label>
+      <textarea id="f-notes" placeholder="Es. lavora da casa il martedì, ama parlare di..."></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modal-contact')">Annulla</button>
+      <button class="btn-primary" onclick="saveContact()">Salva</button>
+    </div>
+    <button class="btn-danger" id="btn-delete-contact" onclick="deleteCurrentContact()" style="display:none">Elimina relazione</button>
+  </div>
+</div>
+
+<!-- ══ MODAL: LOG CALL ══ -->
+<div class="modal-overlay" id="modal-log">
+  <div class="modal">
+    <div class="modal-title">Aggiungi conversazione</div>
+
+    <div class="field">
+      <label>Tipo di contatto</label>
+      <div class="ctype-grid" id="l-ctype-grid"></div>
+    </div>
+
+    <div class="field">
+      <label>Data</label>
+      <input type="date" id="l-date">
+    </div>
+
+    <div class="field">
+      <label>Ora inizio / fine (opzionale)</label>
+      <div style="display:flex;gap:10px;align-items:center">
+        <input type="time" id="l-time-start" style="flex:1">
+        <span style="color:var(--text-muted);font-size:13px">→</span>
+        <input type="time" id="l-time-end" style="flex:1">
+      </div>
+      <div id="l-duration-auto" style="font-size:11px;color:var(--accent);margin-top:5px;min-height:16px"></div>
+    </div>
+
+    <div class="field">
+      <label>Durata (opzionale — o calcolata sopra)</label>
+      <input type="text" id="l-duration" placeholder="Es. 20 min, 1h">
+    </div>
+
+    <div class="field">
+      <label>Note sulla conversazione</label>
+      <textarea id="l-notes" placeholder="Di cosa avete parlato? Che cosa hai sentito?"></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modal-log')">Annulla</button>
+      <button class="btn-primary" onclick="saveLog()">Salva</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+const EMOJIS = ['👤','👨','👩','👴','👵','🧔','👦','👧','🧑','👫','🤝','💼','🙏','⭐','🎯','💡','🌱','🔥','🦁','🐺'];
+const FREQS = [
+  { days: 1, label: 'ogni giorno' },
+  { days: 3, label: '3 gg' },
+  { days: 7, label: '1 sett' },
+  { days: 14, label: '2 sett' },
+  { days: 21, label: '3 sett' },
+  { days: 30, label: '1 mese' },
+  { days: 60, label: '2 mesi' },
+  { days: 90, label: '3 mesi' },
+  { days: 180, label: '6 mesi' },
+  { days: 365, label: '1 anno' },
+];
+const CTYPES = [
+  { id: 'presenza', label: 'In presenza', icon: '🤝' },
+  { id: 'telefonata', label: 'Telefonata', icon: '📞' },
+  { id: 'vocale', label: 'Vocale', icon: '🎙️' },
+  { id: 'messaggio', label: 'Messaggio', icon: '💬' },
+];
+
+let contacts = JSON.parse(localStorage.getItem('rel_contacts') || '[]');
+let logs = JSON.parse(localStorage.getItem('rel_logs') || '{}');
+let currentContactId = null;
+let editingContactId = null;
+let selectedEmoji = '👤';
+let selectedFreq = 14;
+let selectedCtype = 'telefonata';
+let selectedLogCtype = 'telefonata';
+
+function save() {
+  localStorage.setItem('rel_contacts', JSON.stringify(contacts));
+  localStorage.setItem('rel_logs', JSON.stringify(logs));
+}
+
+// ── VIEWS ──
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'view-list') renderList();
+}
+
+// ── UTILS ──
+function today() { return new Date().toISOString().split('T')[0]; }
+
+function daysSinceLastCall(contactId) {
+  const cl = (logs[contactId] || []);
+  if (!cl.length) return null;
+  const last = cl.map(l => l.date).sort().reverse()[0];
+  const diff = Math.floor((new Date(today()) - new Date(last)) / 86400000);
+  return diff;
+}
+
+function statusOf(contact) {
+  const days = daysSinceLastCall(contact.id);
+  if (days === null) return 'overdue'; // never called
+  const ratio = days / contact.freq;
+  if (ratio >= 1) return 'overdue';
+  if (ratio >= 0.7) return 'due-soon';
+  return 'ok';
+}
+
+function daysUntilNext(contact) {
+  const days = daysSinceLastCall(contact.id);
+  if (days === null) return -(contact.freq);
+  return contact.freq - days;
+}
+
+// ── RENDER LIST ──
+function renderList() {
+  const total = contacts.length;
+  let overdue = 0, soon = 0;
+  contacts.forEach(c => {
+    const s = statusOf(c);
+    if (s === 'overdue') overdue++;
+    if (s === 'due-soon') soon++;
+  });
+  document.getElementById('dash-total').textContent = total;
+  document.getElementById('dash-overdue').textContent = overdue;
+  document.getElementById('dash-soon').textContent = soon;
+
+  const sorted = [...contacts].sort((a, b) => daysUntilNext(a) - daysUntilNext(b));
+  const list = document.getElementById('contact-list');
+
+  if (!contacts.length) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="icon">🤝</div>
+      <div class="title">Inizia con una relazione</div>
+      <div class="sub">Aggiungi persone importanti e imposta la frequenza con cui vuoi sentirle. Tieni traccia di ogni conversazione.</div>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = sorted.map(c => {
+    const s = statusOf(c);
+    const d = daysSinceLastCall(c.id);
+    const until = daysUntilNext(c);
+    let pillText, pillClass;
+    if (s === 'overdue') {
+      pillText = d === null ? 'Non chiamato' : `+${Math.abs(until)}g di ritardo`;
+      pillClass = 'overdue';
+    } else if (s === 'due-soon') {
+      pillText = until === 0 ? 'Oggi' : `Tra ${until}g`;
+      pillClass = 'due-soon';
+    } else {
+      pillText = `Tra ${until}g`;
+      pillClass = 'ok';
+    }
+    const callCount = (logs[c.id] || []).length;
+    const ct = CTYPES.find(t => t.id === (c.ctype || 'telefonata')) || CTYPES[1];
+    return `<div class="contact-card ${s}" onclick="openDetail('${c.id}')">
+      <div class="avatar ${s}">${c.emoji || '👤'}</div>
+      <div class="contact-info">
+        <div class="contact-name">${c.name}</div>
+        <div class="contact-meta">${c.category} · <span style="color:var(--text)">${ct.icon} ${ct.label}</span> · ${callCount} contatt${callCount === 1 ? 'o' : 'i'}</div>
+      </div>
+      <div class="contact-status">
+        <div class="days-pill ${pillClass}">${pillText}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── DETAIL ──
+function openDetail(id) {
+  currentContactId = id;
+  const c = contacts.find(x => x.id === id);
+  if (!c) return;
+
+  document.getElementById('detail-header-name').textContent = c.name;
+  document.getElementById('detail-avatar').textContent = c.emoji || '👤';
+  document.getElementById('detail-name').textContent = c.name;
+  const ct = CTYPES.find(t => t.id === (c.ctype || 'telefonata')) || CTYPES[1];
+  document.getElementById('detail-tag').textContent = `${c.category} · ${ct.icon} ${ct.label} · ogni ${c.freq === 1 ? 'giorno' : c.freq + ' giorni'}`;
+  document.getElementById('detail-notes').textContent = c.notes || '';
+
+  const cl = logs[id] || [];
+  const d = daysSinceLastCall(id);
+  const s = statusOf(c);
+  const until = daysUntilNext(c);
+
+  document.getElementById('stat-calls').textContent = cl.length;
+  document.getElementById('stat-freq').textContent = c.freq;
+  document.getElementById('stat-since').textContent = d === null ? '—' : d;
+
+  const banner = document.getElementById('next-call-banner');
+  const main = document.getElementById('banner-main');
+  const sub = document.getElementById('banner-sub');
+  banner.className = `next-call-banner ${s}`;
+  // update banner icon based on contact type
+  const ctBanner = CTYPES.find(t => t.id === (c.ctype || 'telefonata')) || CTYPES[1];
+  document.querySelector('#next-call-banner .banner-icon').textContent = ctBanner.icon;
+
+  if (s === 'overdue') {
+    main.textContent = d === null ? 'Non hai mai chiamato' : `In ritardo di ${Math.abs(until)} giorni`;
+    sub.textContent = 'È ora di sentirsi';
+  } else if (s === 'due-soon') {
+    main.textContent = until === 0 ? 'Chiama oggi!' : `Chiama entro ${until} giorni`;
+    sub.textContent = 'La frequenza si avvicina';
+  } else {
+    main.textContent = `Prossima chiamata tra ${until} giorni`;
+    sub.textContent = `Ultima: ${d !== null ? d + ' giorni fa' : '—'}`;
+  }
+
+  renderLogs(id);
+  showView('view-detail');
+}
+
+function renderLogs(id) {
+  const cl = [...(logs[id] || [])].sort((a, b) => b.date.localeCompare(a.date));
+  const list = document.getElementById('log-list');
+  if (!cl.length) {
+    list.innerHTML = `<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px 0">Nessuna conversazione registrata</div>`;
+    return;
+  }
+  list.innerHTML = cl.map((l, i) => {
+    const dateStr = new Date(l.date).toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const lct = CTYPES.find(t => t.id === (l.ctype || 'telefonata')) || CTYPES[1];
+    return `<div class="log-item">
+      <div class="log-date">📅 ${dateStr}</div>
+      <div style="margin:5px 0 4px">
+        <span class="ctype-badge">${lct.icon} ${lct.label}</span>
+        ${(l.timeStart && l.timeEnd) ? `<span class="ctype-badge">🕐 ${l.timeStart} → ${l.timeEnd}</span>` : ''}
+        ${l.duration ? `<span class="ctype-badge">⏱ ${l.duration}</span>` : ''}
+      </div>
+      ${l.notes ? `<div class="log-note">${l.notes}</div>` : ''}
+      <div class="log-delete" onclick="deleteLog('${id}','${l.id}')">✕</div>
+    </div>`;
+  }).join('');
+}
+
+function deleteLog(contactId, logId) {
+  if (!confirm('Eliminare questa conversazione?')) return;
+  logs[contactId] = (logs[contactId] || []).filter(l => l.id !== logId);
+  save();
+  renderLogs(contactId);
+  openDetail(contactId);
+}
+
+// ── LOG MODAL ──
+function calcDuration() {
+  const s = document.getElementById('l-time-start').value;
+  const e = document.getElementById('l-time-end').value;
+  const el = document.getElementById('l-duration-auto');
+  if (!s || !e) { el.textContent = ''; return; }
+  const [sh,sm] = s.split(':').map(Number);
+  const [eh,em] = e.split(':').map(Number);
+  let diff = (eh*60+em) - (sh*60+sm);
+  if (diff < 0) diff += 1440;
+  const h = Math.floor(diff/60), m = diff%60;
+  const txt = h > 0 ? `${h}h ${m > 0 ? m+'min' : ''}`.trim() : `${m} min`;
+  el.textContent = `⏱ Durata: ${txt}`;
+  document.getElementById('l-duration').value = txt;
+}
+
+function openLogModal() {
+  document.getElementById('l-date').value = today();
+  document.getElementById('l-time-start').value = '';
+  document.getElementById('l-time-end').value = '';
+  document.getElementById('l-duration-auto').textContent = '';
+  document.getElementById('l-duration').value = '';
+  document.getElementById('l-notes').value = '';
+  selectedLogCtype = 'telefonata';
+  buildLogCtypeGrid();
+  openModal('modal-log');
+  // attach listeners for auto-calc
+  document.getElementById('l-time-start').oninput = calcDuration;
+  document.getElementById('l-time-end').oninput = calcDuration;
+}
+function logCallFromBanner() { openLogModal(); }
+
+function buildLogCtypeGrid() {
+  document.getElementById('l-ctype-grid').innerHTML = CTYPES.map(ct =>
+    `<div class="ctype-option ${ct.id === selectedLogCtype ? 'selected' : ''}" onclick="selectLogCtype('${ct.id}')">
+      <span class="ct-icon">${ct.icon}</span><span>${ct.label}</span>
+    </div>`
+  ).join('');
+}
+function selectLogCtype(id) {
+  selectedLogCtype = id;
+  buildLogCtypeGrid();
+}
+
+function saveLog() {
+  const date = document.getElementById('l-date').value;
+  const timeStart = document.getElementById('l-time-start').value;
+  const timeEnd = document.getElementById('l-time-end').value;
+  const duration = document.getElementById('l-duration').value.trim();
+  const notes = document.getElementById('l-notes').value.trim();
+  if (!date) return alert('Inserisci la data');
+  if (!logs[currentContactId]) logs[currentContactId] = [];
+  logs[currentContactId].push({ id: Date.now().toString(), date, timeStart, timeEnd, duration, notes, ctype: selectedLogCtype });
+  save();
+  closeModal('modal-log');
+  openDetail(currentContactId);
+}
+
+// ── CONTACT MODAL ──
+function buildEmojiRow() {
+  document.getElementById('emoji-row').innerHTML = EMOJIS.map(e =>
+    `<div class="emoji-btn ${e === selectedEmoji ? 'selected' : ''}" onclick="selectEmoji('${e}')">${e}</div>`
+  ).join('');
+}
+function selectEmoji(e) {
+  selectedEmoji = e;
+  document.querySelectorAll('.emoji-btn').forEach(b => {
+    b.classList.toggle('selected', b.textContent === e);
+  });
+}
+
+function buildFreqGrid() {
+  document.getElementById('freq-grid').innerHTML = FREQS.map(f =>
+    `<div class="freq-option ${f.days === selectedFreq ? 'selected' : ''}" onclick="selectFreq(${f.days})">
+      <div class="freq-days">${f.days}</div>
+      <div>${f.label}</div>
+    </div>`
+  ).join('');
+}
+function selectFreq(d) {
+  selectedFreq = d;
+  document.querySelectorAll('.freq-option').forEach(b => {
+    b.classList.toggle('selected', parseInt(b.querySelector('.freq-days').textContent) === d);
+  });
+}
+
+function buildCtypeGrid() {
+  document.getElementById('f-ctype-grid').innerHTML = CTYPES.map(ct =>
+    `<div class="ctype-option ${ct.id === selectedCtype ? 'selected' : ''}" onclick="selectCtype('${ct.id}')">
+      <span class="ct-icon">${ct.icon}</span><span>${ct.label}</span>
+    </div>`
+  ).join('');
+}
+function selectCtype(id) {
+  selectedCtype = id;
+  buildCtypeGrid();
+}
+
+function openAddContact() {
+  editingContactId = null;
+  selectedEmoji = '👤'; selectedFreq = 14; selectedCtype = 'telefonata';
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-category').value = 'Amico';
+  document.getElementById('f-notes').value = '';
+  document.getElementById('modal-contact-title').textContent = 'Nuova relazione';
+  document.getElementById('btn-delete-contact').style.display = 'none';
+  buildEmojiRow(); buildFreqGrid(); buildCtypeGrid();
+  openModal('modal-contact');
+}
+
+function editCurrentContact() {
+  const c = contacts.find(x => x.id === currentContactId);
+  if (!c) return;
+  editingContactId = c.id;
+  selectedEmoji = c.emoji || '👤';
+  selectedFreq = c.freq;
+  selectedCtype = c.ctype || 'telefonata';
+  document.getElementById('f-name').value = c.name;
+  document.getElementById('f-category').value = c.category;
+  document.getElementById('f-notes').value = c.notes || '';
+  document.getElementById('modal-contact-title').textContent = 'Modifica relazione';
+  document.getElementById('btn-delete-contact').style.display = 'block';
+  buildEmojiRow(); buildFreqGrid(); buildCtypeGrid();
+  openModal('modal-contact');
+}
+
+function saveContact() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) return alert('Inserisci il nome');
+  const data = {
+    name,
+    emoji: selectedEmoji,
+    category: document.getElementById('f-category').value,
+    freq: selectedFreq,
+    ctype: selectedCtype,
+    notes: document.getElementById('f-notes').value.trim(),
+  };
+  if (editingContactId) {
+    const i = contacts.findIndex(c => c.id === editingContactId);
+    contacts[i] = { ...contacts[i], ...data };
+  } else {
+    contacts.push({ id: Date.now().toString(), ...data });
+  }
+  save();
+  closeModal('modal-contact');
+  if (editingContactId) openDetail(editingContactId);
+  else renderList();
+}
+
+function deleteCurrentContact() {
+  if (!confirm('Eliminare questa relazione e tutto il suo storico?')) return;
+  contacts = contacts.filter(c => c.id !== currentContactId);
+  delete logs[currentContactId];
+  save();
+  closeModal('modal-contact');
+  showView('view-list');
+}
+
+// ── MODAL HELPERS ──
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ── INIT ──
+renderList();
+</script>
+</body>
+</html>
